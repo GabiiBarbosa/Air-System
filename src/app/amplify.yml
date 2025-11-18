@@ -1,0 +1,28 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - NEXT_TELEMETRY_DISABLED=1 npm run build
+      artifacts:
+        baseDirectory: .next/standalone
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*
+    customHeaders:
+      - pattern: '**/*'
+        headers:
+          - key: Cache-Control
+            value: no-store
+    customRules:
+      - source: '/<*>'
+        target: '/server.js'
+        status: '200'
