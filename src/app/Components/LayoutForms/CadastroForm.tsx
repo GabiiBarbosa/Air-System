@@ -1,7 +1,7 @@
 'use client';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { criarUser } from '../../Firebase/FirebaseConfig';
+import { criarUser } from '@/src/app/Firebase/FirebaseConfig';
 // ✅ 1. Importa o FormFeedback
 import FormContainer, { FormButton, FormInput, FormFeedback } from '../LayoutForms/Forms';
 

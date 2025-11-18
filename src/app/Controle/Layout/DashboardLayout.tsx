@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { handleLogout } from '@/src/app/Firebase/FirebaseConfig'; 
 import React, { useState } from 'react';
 import Popup from '@/src/app/Components/Poput';
-import StatusArCondicionado from '@/src/app/Components/StatuslArCond';
+import StatusArCondicionado from '@/src/app/Components/StatusArCond';
 
 // --- Ícones ---
 const ComputerIcon = () => (

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import CadastroForm from '@/src/app/Components/Forms/CadastroForm';
+import CadastroForm from '@/src/app/Components/LayoutForms/CadastroForm';
 import '@/src/app/globals.css';
 
 export default function RegisterPage() {
