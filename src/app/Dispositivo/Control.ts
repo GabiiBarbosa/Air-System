@@ -83,6 +83,8 @@ export function useRelayControl() {
     error,         //Mensagem de erro (null se não houver)
     fetchStatus,   //Função para buscar manualmente
     controlRelay,  //Função para ligar/desligar
+    turnOn: () => controlRelay('on'),
+    turnOff: () => controlRelay('off'),
     isOn: status?.relay === 'on',   //Conveniência: true se estiver ligado
     isOff: status?.relay === 'off', //Conveniência: true se estiver desligado
   };

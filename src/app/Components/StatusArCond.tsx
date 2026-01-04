@@ -1,12 +1,11 @@
 'use client';
 import React from 'react';
-import { useRelayControl } from '@/src/app/api/Control';
+import { useRelayControl } from '@/src/app/Dispositivo/Control';
 
 export default function EstadoArCondicionado() {
-    //estado do relé
-    const { isOn, loading, error } = useRelayControl();
+    const { isOn, loading, error, turnOn, turnOff } = useRelayControl();
 
-    //mostra indicador de carregamento
+    // Load
     if (loading) {
         return (
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
@@ -18,7 +17,7 @@ export default function EstadoArCondicionado() {
         );
     }
 
-    //mensagem de erro
+    // Erro
     if (error) {
         return (
             <div className="bg-red-50 p-4 rounded-md border border-red-200">
@@ -32,30 +31,69 @@ export default function EstadoArCondicionado() {
         );
     }
 
+    // Sucesso — exibe estado + botões
     return (
-        <div className={`p-4 rounded-md border ${
-            isOn 
-                ? 'bg-green-50 border-green-200'  // ← VERDE se ligado
-                : 'bg-gray-50 border-gray-200'    // ← CINZA se desligado
-        }`}>
-            <h4 className="font-medium text-gray-700 mb-2">Estado do Ar Condicionado:</h4>
-            <div className="flex items-center gap-2">
+        <div className="space-y-4">
 
-                <div className={`w-3 h-3 rounded-full ${
-                    isOn ? 'bg-green-500' : 'bg-gray-400'
-                }`}></div>
-                
+            {/* BLOCO DO ESTADO */}
+            <div className={`p-4 rounded-md border ${
+                isOn 
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-gray-50 border-gray-200'
+            }`}>
+                <h4 className="font-medium text-gray-700 mb-2">Estado do Ar Condicionado:</h4>
 
-                <span className={`font-medium ${
-                    isOn ? 'text-green-700' : 'text-gray-600'
-                }`}>
-                    {isOn ? 'Ligado' : 'Desligado'}
-                </span>
+                <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                        isOn ? 'bg-green-500' : 'bg-gray-400'
+                    }`} />
+
+                    <span className={`font-medium ${
+                        isOn ? 'text-green-700' : 'text-gray-600'
+                    }`}>
+                        {isOn ? 'Ligado' : 'Desligado'}
+                    </span>
+                </div>
+
+                <p className="text-gray-500 text-xs mt-2">
+                    Estado atualizado em tempo real do relé físico
+                </p>
             </div>
-                
-            <p className="text-gray-500 text-xs mt-2">
-                Estado atualizado em tempo real do relé físico
-            </p>
+
+            {/* BOTÕES DE AÇÃO */}
+            <div className="flex justify-end space-x-3">
+
+                {/* DESLIGAR */}
+                <button
+                    onClick={async () => await turnOff()}
+                    disabled={!isOn}
+                    className={`
+                        px-4 py-2 text-sm font-medium rounded-md transition-colors
+                        ${isOn 
+                            ? "bg-red-600 text-white hover:bg-red-700" 
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }
+                    `}
+                >
+                    Desligar Ar
+                </button>
+
+                {/* LIGAR */}
+                <button
+                    onClick={async () => await turnOn()}
+                    disabled={isOn}
+                    className={`
+                        px-4 py-2 text-sm font-medium rounded-md transition-colors
+                        ${!isOn 
+                            ? "bg-green-600 text-white hover:bg-green-700" 
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }
+                    `}
+                >
+                    Ligar Ar
+                </button>
+
+            </div>
         </div>
     );
 }

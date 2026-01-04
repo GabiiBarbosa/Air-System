@@ -1,18 +1,15 @@
-// app/Controle/Layout/DashboardLayout.tsx
-
 'use client';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation'; 
-import { handleLogout } from '@/src/app/Firebase/FirebaseConfig'; 
+import { handleLogout } from '@/src/app/Services/AuthService'; 
 import React, { useState } from 'react';
 import Popup from '@/src/app/Components/Poput';
 import StatusArCondicionado from '@/src/app/Components/StatusArCond';
 
 // --- Ícones ---
 const ComputerIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1v-3.25H9.75z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 12V6a2 2 0 00-2-2H8a2 2 0 00-2 2v6m11.5 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
 );
 
@@ -20,6 +17,13 @@ const ComputerIcon = () => (
 const LabIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+    </svg>
+);
+
+// --- Ícone de Relatório ---
+const ReportIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );
 
@@ -51,7 +55,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const router = useRouter();
-    const [moduloAtivo, setModuloAtivo] = useState<string | null>('controle');
+    // Inicialize como null para mostrar o módulo em branco inicialmente
+    const [moduloAtivo, setModuloAtivo] = useState<string | null>(null);
     const [showLabPopup, setShowLabPopup] = useState(false);
 
     const handleLogoutClick = async () => {
@@ -66,14 +71,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     // --- Componentes dos Módulos ---
     const ModuloEmBranco = () => (
-        <div className="flex items-center justify-center h-full text-gray-500">
-            <p>Selecione um módulo na barra lateral para começar.</p>
+        <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
+            <div className="text-center max-w-md">
+                <div className="mb-4 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h2 className="text-xl font-semibold mb-2">Bem-vindo ao Painel de Controle</h2>
+                <p className="text-gray-600">Selecione um módulo na barra lateral para começar.</p>
+            </div>
         </div>
     );
 
     const ModuloDeControle = () => (
         <>
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Módulo de Controle</h1>
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Módulo de Controle</h1>
+                <p className="text-gray-600">Gerencie os laboratórios e equipamentos.</p>
+            </div>
             <div className="p-6 bg-gray-100 rounded-lg border-2 border-gray-300">
                 <div className="flex flex-col space-y-3 max-w-xs">
                     <p className="text-gray-600 text-sm font-medium">Selecione um laboratório:</p>
@@ -100,30 +116,54 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-800">Informações do Laboratório 1</h3>
-                        <StatusArCondicionado />
-
-                        <div className="flex justify-end space-x-3 mt-6">
-                            <button 
-                                onClick={() => setShowLabPopup(false)}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                            >
-                                Fechar
-                            </button>
-                            <button 
-                                onClick={() => {
-                                    alert('Ação do Laboratório 1 executada!');
-                                    setShowLabPopup(false);
-                                }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#3730A3] rounded-md hover:bg-[#2a247c] transition-colors"
-                            >
-                                Executar Ação
-                            </button>
-                        </div>
+                        <StatusArCondicionado/>
                     </div>
                 </Popup>
             )}
         </>
     );
+
+    const ModuloDeRelatorio = () => (
+        <>
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Módulo de Relatórios</h1>
+                <p className="text-gray-600">Visualize relatórios e análises dos laboratórios.</p>
+            </div>
+            <div className="p-6 bg-gray-100 rounded-lg border-2 border-gray-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Uso</h3>
+                        <p className="text-sm text-gray-600 mb-3">Consumo energético dos laboratórios.</p>
+                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
+                            Visualizar →
+                        </button>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Temperatura</h3>
+                        <p className="text-sm text-gray-600 mb-3">Histórico de temperaturas registradas.</p>
+                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
+                            Visualizar →
+                        </button>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Manutenção</h3>
+                        <p className="text-sm text-gray-600 mb-3">Registros de manutenção dos equipamentos.</p>
+                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
+                            Visualizar →
+                        </button>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Ocupação</h3>
+                        <p className="text-sm text-gray-600 mb-3">Horários de utilização dos laboratórios.</p>
+                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
+                            Visualizar →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+
     return (
         <div className="min-h-screen bg-[#3730A3] p-6"> 
             <div className="flex flex-col min-h-[calc(100vh-3rem)] bg-[#F3F4F6] rounded-sm"> 
@@ -155,11 +195,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         > 
                             <ComputerIcon />
                         </BarraItens>
+                        
+                        <BarraItens 
+                            isActive={moduloAtivo === 'relatorio'} 
+                            onClick={() => setModuloAtivo('relatorio')} 
+                        > 
+                            <ReportIcon />
+                        </BarraItens>
                     </aside>
         
                     <main className="flex-1 bg-white p-6">
                         {moduloAtivo === null && <ModuloEmBranco />}
                         {moduloAtivo === 'controle' && <ModuloDeControle />}
+                        {moduloAtivo === 'relatorio' && <ModuloDeRelatorio />}
                         {children}
                     </main>
                 </div>
