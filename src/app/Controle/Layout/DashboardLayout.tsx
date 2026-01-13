@@ -1,10 +1,13 @@
 'use client';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; 
-import { handleLogout } from '@/src/app/Services/AuthService'; 
+import { useRouter } from 'next/navigation';
+import { handleLogout } from '@/src/app/Services/AuthService';
 import React, { useState } from 'react';
-import Popup from '@/src/app/Components/Poput';
+import Popup from '@/src/app/Components/Popup'; 
 import StatusArCondicionado from '@/src/app/Components/StatusArCond';
+import OcupacaoRelatorio from '@/src/app/Components/Ocupacao';
+// NOVO IMPORT
+import ManutencaoGerenciamento from '@/src/app/Components/Manutencao';
 
 // --- Ícones ---
 const ComputerIcon = () => (
@@ -13,51 +16,69 @@ const ComputerIcon = () => (
     </svg>
 );
 
-// --- Ícone do LAB 1
 const LabIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
     </svg>
 );
 
-// --- Ícone de Relatório ---
 const ReportIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );
 
-// --- Componente da Sidebar ---
-interface BarraItensProps {
-    children: React.ReactNode;
-    isActive: boolean;
+// --- Componentes Auxiliares ---
+
+interface CardRelatorioProps {
+    title: string;
+    subtitle: string;
+    description: string;
+    iconPath: React.ReactNode;
     onClick: () => void;
 }
 
-const BarraItens = ({ children, isActive, onClick }: BarraItensProps) => (
-    <div 
+const CardRelatorio = ({ title, subtitle, description, iconPath, onClick }: CardRelatorioProps) => (
+    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+        <div>
+            <div className="flex items-start justify-between mb-4">
+                <div>
+                    <h3 className="font-semibold text-gray-800 text-lg mb-1">{title}</h3>
+                    <p className="text-sm text-gray-600">{subtitle}</p>
+                </div>
+                <div className="text-[#3730A3] bg-indigo-50 p-2 rounded-lg">
+                    {iconPath}
+                </div>
+            </div>
+            <p className="text-gray-700 mb-4 text-sm">{description}</p>
+        </div>
+        <button 
+            onClick={onClick}
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-[#3730A3] rounded-md hover:bg-[#2d2880] transition-colors"
+        >
+            Visualizar Detalhes
+        </button>
+    </div>
+);
+
+const BarraItens = ({ children, isActive, onClick }: { children: React.ReactNode, isActive: boolean, onClick: () => void }) => (
+    <div
         onClick={onClick}
         role="button"
-        className={`flex items-center justify-center p-3 cursor-pointer w-full transition-colors duration-200
-            ${isActive 
-                ? 'bg-white rounded-md shadow-md text-[#3730A3]'
-                : 'text-gray-400 hover:bg-gray-200'
-            }`
-        }
+        className={`flex items-center justify-center p-3 cursor-pointer w-full rounded-md transition-all duration-200
+            ${isActive ? 'bg-white shadow-md text-[#3730A3]' : 'text-gray-400 hover:bg-gray-200'}`}
     >
         {children}
     </div>
 );
 
-interface DashboardLayoutProps {
-    children: React.ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: { children?: React.ReactNode }) {
     const router = useRouter();
-    // Inicialize como null para mostrar o módulo em branco inicialmente
     const [moduloAtivo, setModuloAtivo] = useState<string | null>(null);
     const [showLabPopup, setShowLabPopup] = useState(false);
+    const [showOcupacaoPopup, setShowOcupacaoPopup] = useState(false);
+    // ESTADO PARA MANUTENÇÃO
+    const [showManutencaoPopup, setShowManutencaoPopup] = useState(false);
 
     const handleLogoutClick = async () => {
         try {
@@ -65,22 +86,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             router.push('/');
         } catch (error) {
             console.error("Erro ao fazer logout:", error);
-            alert("Erro ao sair.");
         }
     };
 
-    // --- Componentes dos Módulos ---
     const ModuloEmBranco = () => (
         <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
-            <div className="text-center max-w-md">
-                <div className="mb-4 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <h2 className="text-xl font-semibold mb-2">Bem-vindo ao Painel de Controle</h2>
-                <p className="text-gray-600">Selecione um módulo na barra lateral para começar.</p>
-            </div>
+            <h2 className="text-xl font-semibold mb-2">Bem-vindo ao Painel de Controle</h2>
+            <p className="text-gray-600">Selecione um módulo na barra lateral para começar.</p>
         </div>
     );
 
@@ -90,34 +102,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">Módulo de Controle</h1>
                 <p className="text-gray-600">Gerencie os laboratórios e equipamentos.</p>
             </div>
-            <div className="p-6 bg-gray-100 rounded-lg border-2 border-gray-300">
-                <div className="flex flex-col space-y-3 max-w-xs">
-                    <p className="text-gray-600 text-sm font-medium">Selecione um laboratório:</p>
-                    
-                    <div 
-                        onClick={() => setShowLabPopup(true)}
-                        className="flex items-center gap-3 p-3 cursor-pointer bg-white rounded-lg border border-gray-300 hover:border-[#3730A3] hover:shadow-sm transition-all duration-200"
-                        role="button"
-                        title="Laboratório 1"
-                    >
-                        <div className="text-[#3730A3]">
-                            <LabIcon />
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">LAB 1</span>
-                    </div>
+            <div className="p-6 bg-gray-100 rounded-lg border-2 border-gray-300 max-w-xs">
+                <p className="text-gray-600 text-sm font-medium mb-3">Selecione um laboratório:</p>
+                <div
+                    onClick={() => setShowLabPopup(true)}
+                    className="flex items-center gap-3 p-3 cursor-pointer bg-white rounded-lg border border-gray-300 hover:border-[#3730A3] transition-all group"
+                >
+                    <div className="text-[#3730A3] group-hover:scale-110 transition-transform"><LabIcon /></div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-[#3730A3]">LAB 1</span>
                 </div>
             </div>
 
-            {/* Popup do LAB 1 */}
             {showLabPopup && (
-                <Popup 
-                    onClose={() => setShowLabPopup(false)}
-                    title="Laboratório 1"
-                >
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800">Informações do Laboratório 1</h3>
-                        <StatusArCondicionado/>
-                    </div>
+                <Popup onClose={() => setShowLabPopup(false)} title="Laboratório 1">
+                    <StatusArCondicionado />
                 </Popup>
             )}
         </>
@@ -127,88 +125,67 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <>
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">Módulo de Relatórios</h1>
-                <p className="text-gray-600">Visualize relatórios e análises dos laboratórios.</p>
+                <p className="text-gray-600">Visualize relatórios e histórico de manutenção.</p>
             </div>
-            <div className="p-6 bg-gray-100 rounded-lg border-2 border-gray-300">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Uso</h3>
-                        <p className="text-sm text-gray-600 mb-3">Consumo energético dos laboratórios.</p>
-                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
-                            Visualizar →
-                        </button>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Temperatura</h3>
-                        <p className="text-sm text-gray-600 mb-3">Histórico de temperaturas registradas.</p>
-                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
-                            Visualizar →
-                        </button>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Manutenção</h3>
-                        <p className="text-sm text-gray-600 mb-3">Registros de manutenção dos equipamentos.</p>
-                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
-                            Visualizar →
-                        </button>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 className="font-semibold text-gray-800 mb-2">Relatório de Ocupação</h3>
-                        <p className="text-sm text-gray-600 mb-3">Horários de utilização dos laboratórios.</p>
-                        <button className="text-sm text-[#3730A3] font-medium hover:underline">
-                            Visualizar →
-                        </button>
-                    </div>
-                </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <CardRelatorio 
+                    title="Relatório de Ocupação"
+                    subtitle="Uso dos Laboratórios"
+                    description="Registro completo de entradas, saídas e acionamento de equipamentos."
+                    iconPath={<ReportIcon />}
+                    onClick={() => setShowOcupacaoPopup(true)}
+                />
+
+                <CardRelatorio 
+                    title="Gestão de Manutenção"
+                    subtitle="Preventiva e Corretiva"
+                    description="Visualize o histórico de manutenções e registre novos serviços realizados."
+                    iconPath={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                    onClick={() => setShowManutencaoPopup(true)}
+                />
             </div>
+
+            {/* Popup Ocupação */}
+            {showOcupacaoPopup && (
+                <Popup onClose={() => setShowOcupacaoPopup(false)} title="Relatório de Ocupação">
+                    <OcupacaoRelatorio />
+                </Popup>
+            )}
+
+            {/* Popup Manutenção */}
+            {showManutencaoPopup && (
+                <Popup onClose={() => setShowManutencaoPopup(false)} title="Histórico de Manutenção">
+                    <ManutencaoGerenciamento />
+                </Popup>
+            )}
         </>
     );
 
     return (
-        <div className="min-h-screen bg-[#3730A3] p-6"> 
-            <div className="flex flex-col min-h-[calc(100vh-3rem)] bg-[#F3F4F6] rounded-sm"> 
-                
+        <div className="min-h-screen bg-[#3730A3] p-4 md:p-6">
+            <div className="flex flex-col min-h-[calc(100vh-3rem)] bg-[#F3F4F6] rounded-sm overflow-hidden shadow-xl">
                 <header className="flex justify-between items-center h-20 border-b-2 border-gray-300 px-6 bg-white">
-                    <div className="flex items-center space-x-3">
-                        <Image
-                            src="/logo-catolica-da-paraiba.png" 
-                            alt="Faculdade Católica da Paraíba"
-                            width={200} 
-                            height={50}
-                            className="h-12 w-auto object-contain" 
-                        />
-                    </div>
-                    <button 
-                        onClick={handleLogoutClick}
-                        className="text-sm font-semibold text-gray-500 hover:text-red-600 transition duration-150 tracking-wider"
-                    >
-                        LOGOUT
+                    <Image src="/logo-catolica-da-paraiba.png" alt="Logo" width={200} height={50} className="h-10 w-auto object-contain" />
+                    <button onClick={handleLogoutClick} className="text-sm font-semibold text-gray-500 hover:text-red-600 flex items-center gap-1">
+                        SAIR <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                     </button>
                 </header>
 
-                <div className="flex flex-1">
-                    
-                    <aside className="w-20 bg-gray-100 p-2 space-y-4 flex flex-col items-center">
-                        <BarraItens 
-                            isActive={moduloAtivo === 'controle'} 
-                            onClick={() => setModuloAtivo('controle')} 
-                        > 
+                <div className="flex flex-1 overflow-hidden">
+                    <aside className="w-20 bg-gray-50 border-r border-gray-200 p-2 space-y-4 flex flex-col items-center">
+                        <BarraItens isActive={moduloAtivo === 'controle'} onClick={() => setModuloAtivo('controle')}>
                             <ComputerIcon />
                         </BarraItens>
-                        
-                        <BarraItens 
-                            isActive={moduloAtivo === 'relatorio'} 
-                            onClick={() => setModuloAtivo('relatorio')} 
-                        > 
+                        <BarraItens isActive={moduloAtivo === 'relatorio'} onClick={() => setModuloAtivo('relatorio')}>
                             <ReportIcon />
                         </BarraItens>
                     </aside>
-        
-                    <main className="flex-1 bg-white p-6">
+                    <main className="flex-1 bg-white p-6 overflow-y-auto">
                         {moduloAtivo === null && <ModuloEmBranco />}
                         {moduloAtivo === 'controle' && <ModuloDeControle />}
                         {moduloAtivo === 'relatorio' && <ModuloDeRelatorio />}
-                        {children}
                     </main>
                 </div>
             </div>

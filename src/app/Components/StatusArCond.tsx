@@ -1,98 +1,107 @@
 'use client';
-import React from 'react';
-import { useRelayControl } from '@/src/app/Dispositivo/Control';
+import React, { useState, useEffect } from 'react';
 
-export default function EstadoArCondicionado() {
-    const { isOn, loading, error, turnOn, turnOff } = useRelayControl();
+export default function StatusArCondicionado() {
+    const [usuario, setUsuario] = useState({ nome: "Carregando...", email: "..." });
+    // Inicializamos o estado tentando ler do localStorage para não resetar ao fechar o popup
+    const [status, setStatus] = useState([
+        { id: 1, nome: 'Ar 01', ligado: false },
+        { id: 2, nome: 'Ar 02', ligado: false },
+        { id: 3, nome: 'Ar 03', ligado: false },
+    ]);
 
-    // Load
-    if (loading) {
-        return (
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-                <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                    <span className="text-gray-600 text-sm">Buscando estado do ar condicionado...</span>
-                </div>
-            </div>
-        );
-    }
+    useEffect(() => {
+        // 1. Carrega dados do usuário
+        const dadosSalvos = localStorage.getItem('usuario_air_system');
+        if (dadosSalvos) {
+            try {
+                const userJson = JSON.parse(dadosSalvos);
+                setUsuario({
+                    nome: userJson.nome || "Usuário Logado",
+                    email: userJson.email || "email@nao-encontrado.com"
+                });
+            } catch (e) {
+                setUsuario({ nome: "Erro", email: "erro.sessao@catolica.edu.br" });
+            }
+        }
 
-    // Erro
-    if (error) {
-        return (
-            <div className="bg-red-50 p-4 rounded-md border border-red-200">
-                <h4 className="font-medium text-red-700 mb-2">Estado do Ar Condicionado:</h4>
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-red-700 font-medium">Erro de Conexão</span>
-                </div>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
-            </div>
-        );
-    }
+        // 2. Carrega o estado dos Ares-Condicionados para não resetar o botão
+        const estadoAresSalvo = localStorage.getItem('estado_ares_condicionado');
+        if (estadoAresSalvo) {
+            try {
+                setStatus(JSON.parse(estadoAresSalvo));
+            } catch (e) {
+                console.error("Erro ao carregar estado dos ares", e);
+            }
+        }
+    }, []);
 
-    // Sucesso — exibe estado + botões
+    const salvarLog = async (arNome: string, acao: string) => {
+        try {
+            await fetch('/api/Historico', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario: { 
+                        nome: usuario.nome, 
+                        email: usuario.email 
+                    },
+                    laboratorio: "Laboratório 01",
+                    arCondicionado: { 
+                        nome: arNome, 
+                        status: acao === 'ligou_ar' ? 'ligado' : 'desligado' 
+                    },
+                    acao: acao,
+                    horario: new Date().toISOString()
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao registrar no relatório:", error);
+        }
+    };
+
+    const toggleStatus = (id: number) => {
+        const novoStatus = status.map(ar => {
+            if (ar.id === id) {
+                const novoEstado = !ar.ligado;
+                salvarLog(ar.nome, novoEstado ? 'ligou_ar' : 'desligou_ar');
+                return { ...ar, ligado: novoEstado };
+            }
+            return ar;
+        });
+
+        // Atualiza o estado na tela
+        setStatus(novoStatus);
+        // Salva no localStorage para que, ao reabrir o popup, o botão continue ligado/desligado
+        localStorage.setItem('estado_ares_condicionado', JSON.stringify(novoStatus));
+    };
+
     return (
         <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {status.map((ar) => (
+                    <div key={ar.id} className="border-2 rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-bold text-gray-800 text-lg">{ar.nome}</h4>
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                                ar.ligado ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                                {ar.ligado ? '● LIGADO' : '○ DESLIGADO'}
+                            </span>
+                        </div>
 
-            {/* BLOCO DO ESTADO */}
-            <div className={`p-4 rounded-md border ${
-                isOn 
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-gray-50 border-gray-200'
-            }`}>
-                <h4 className="font-medium text-gray-700 mb-2">Estado do Ar Condicionado:</h4>
-
-                <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                        isOn ? 'bg-green-500' : 'bg-gray-400'
-                    }`} />
-
-                    <span className={`font-medium ${
-                        isOn ? 'text-green-700' : 'text-gray-600'
-                    }`}>
-                        {isOn ? 'Ligado' : 'Desligado'}
-                    </span>
-                </div>
-
-                <p className="text-gray-500 text-xs mt-2">
-                    Estado atualizado em tempo real do relé físico
-                </p>
-            </div>
-
-            {/* BOTÕES DE AÇÃO */}
-            <div className="flex justify-end space-x-3">
-
-                {/* DESLIGAR */}
-                <button
-                    onClick={async () => await turnOff()}
-                    disabled={!isOn}
-                    className={`
-                        px-4 py-2 text-sm font-medium rounded-md transition-colors
-                        ${isOn 
-                            ? "bg-red-600 text-white hover:bg-red-700" 
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        }
-                    `}
-                >
-                    Desligar Ar
-                </button>
-
-                {/* LIGAR */}
-                <button
-                    onClick={async () => await turnOn()}
-                    disabled={isOn}
-                    className={`
-                        px-4 py-2 text-sm font-medium rounded-md transition-colors
-                        ${!isOn 
-                            ? "bg-green-600 text-white hover:bg-green-700" 
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        }
-                    `}
-                >
-                    Ligar Ar
-                </button>
-
+                        <button
+                            onClick={() => toggleStatus(ar.id)}
+                            className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all shadow-lg active:scale-95 ${
+                                ar.ligado
+                                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-100'
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-100'
+                            }`}
+                        >
+                            {ar.ligado ? 'DESLIGAR AR' : 'LIGAR AR'}
+                        </button>
+                    </div>
+                ))}
             </div>
         </div>
     );

@@ -36,6 +36,10 @@ export async function POST(request: Request) {
     }, { status: 201 });
 
   } catch (error) {
-    return NextResponse.json({ message: 'Erro no servidor' }, { status: 500 });
+    console.error("ERRO DETALHADO DA API:", error); // Isso vai aparecer no terminal do VS Code
+    return NextResponse.json({ 
+      message: 'Erro no servidor', 
+      debug: error instanceof Error ? error.message : "Erro desconhecido" 
+    }, { status: 500 });
   }
 }
